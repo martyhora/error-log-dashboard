@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>ErrorLog Dashboard</title>
+
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.5.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/ionicons/2.0.1/css/ionicons.min.css">
+
+    <link rel="stylesheet" href="dist/css/app.css">
+
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+</head>
+<body class="hold-transition skin-blue sidebar-mini">
+    <div id="app">
+      <div class="wrapper">
+
+        <header class="main-header">
+
+          <a href="" class="logo">
+
+            <span class="logo-mini"><b>ErrorLog</b>Dashboard</span>
+
+              <span class="logo-lg"><b>ErrorLog</b>Dashboard</span>
+          </a>
+
+          <nav class="navbar navbar-static-top" role="navigation">
+            <div class="navbar-custom-menu">
+            </div>
+          </nav>
+        </header>
+
+        <div class="content-wrapper" id="mainapp">
+          <section class="content-header" id="trend">
+              <div style="float: left; padding-top: 7px; margin-right: 15px;">
+                  <label>
+                      <input type="checkbox" v-model="hideResolved"> Hide resolved and selected error types
+                  </label>
+              </div>
+              <div style="float: left; margin-right: 15px;">
+                  <select v-model="project" class="form-control">
+                      <option v-for="project in projects" :value="project">{{ project }}</option>
+                  </select>
+              </div>
+              <button class="btn btn-info" @click="updateAll" style="float: left;">Update all</button>
+              <br style="clear: both;">
+              <br>
+
+              <div>
+                  <div class="box box-info">
+                      <div class="box-header">
+                          <h3 class="box-title">Error trends</h3>
+                      </div>
+                      <!-- /.box-header -->
+                      <div class="box-body">
+                          <div v-for="cData in countData">
+                              <div :id="`${cData.logType}Chart`"></div>
+
+                              <button class="btn btn-info" @click="updateLastDaysLog(cData.logType)">
+                                  Show all {{ cData.logType }}s
+                              </button>
+                          </div>
+
+                          <div v-for="cData in countData">
+                              <div :id="`${cData.logType}Piechart`" style="float: left;"></div>
+                          </div>
+
+                          <br style="clear: both;">
+
+                          <br>
+                          <div v-for="cData in countData" :id="`log-${cData.logType}`" v-if="cData.log.length > 0">
+                              <p class="lead">{{ cData.caption }}</p>
+
+                              <label>
+                                  <input type="checkbox" v-model="groupRows" @change="filterErrorLog"> Group errors
+                              </label>
+
+                              <br>
+                              <br>
+
+                              <table class="table table-striped">
+                                  <tr>
+                                      <th>ID</th>
+                                      <th>Date</th>
+                                      <th>Time</th>
+                                      <th>Count</th>
+                                      <th>Type</th>
+                                      <th>First occurence</th>
+                                      <th>Last occurence</th>
+                                      <th>Message</th>
+                                  </tr>
+                                  <tr v-for="error in cData.log">
+                                      <td :class="{'bg-success': error.resolvedDate >= error.datetime}" class="text-center">{{ error.errId }}</td>
+                                      <td :class="{'bg-success': error.resolvedDate >= error.datetime}">
+                                          {{ error.date }} <br>
+
+                                          <a @click="checkError(error)" title="Resolve error">
+                                              <span class="glyphicon glyphicon-ok" style="cursor: pointer;"></span>
+                                          </a>
+                                      </td>
+                                      <td :class="{'bg-success': error.resolvedDate >= error.datetime}">{{ error.time }}</td>
+                                      <td :class="{'bg-success': error.resolvedDate >= error.datetime}" style="text-align: right;">{{ error.cnt }}</td>
+                                      <td :class="{'bg-success': error.resolvedDate >= error.datetime}">
+                                          <a href="#" @click.prevent="updateLastDaysLog(error.logType, error.errorType)">{{ error.errorType }}</a>
+                                      </td>
+                                      <td :class="{'bg-success': error.resolvedDate >= error.datetime}">
+                                          <a href="#" @click.prevent="updateDayLog({ date: error.firstOccurenceDatetime.substr(0, 6), logType: error.logType })">
+                                            {{ error.firstOccurenceDatetime }}
+                                          </a>
+                                      </td>
+                                      <td :class="{'bg-success': error.resolvedDate >= error.datetime}">
+                                          <a href="#" @click.prevent="updateDayLog({ date: error.lastOccurenceDatetime.substr(0, 6), logType: error.logType })">
+                                              {{ error.lastOccurenceDatetime }}
+                                          </a>
+                                      </td>
+                                      <td :class="{'bg-success': error.resolvedDate >= error.datetime}">
+                                          <div v-html="" style="word-wrap: break-word;">{{ error.error }}</div>
+                                          <a :href="error.url" target="_blank">{{ error.url }}</a> <br>
+                                          {{ error.errorFile }}
+                                      </td>
+                                  </tr>
+                              </table>
+                          </div>
+                      </div>
+                  </div>
+
+              </div>
+          </section>
+
+          <section class="content">
+
+          </section>
+        </div>
+
+        <footer class="main-footer">
+          <div class="pull-right hidden-xs">
+
+          </div>
+
+            <strong>Copyright &copy; 2017</strong>
+        </footer>
+
+
+        <div class="control-sidebar-bg"></div>
+      </div>
+    </div>
+
+    <script src="dist/js/app.js"></script>
+</body>
+
+</html>
