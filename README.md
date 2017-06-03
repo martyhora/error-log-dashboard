@@ -1,5 +1,5 @@
 # Error Log Dashboard Application
-Application for visualising error logs stored in database by using well-arranged charts. Supports multiple projects, filtering errors and resolving errors.
+Application for visualising error logs stored in database by using well-arranged charts. Supports multiple projects, filtering errors and resolving errors. Makes it easier to analyze error logs and helps to fix bugs.
 
 # Installation
 
