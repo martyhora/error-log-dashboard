@@ -80,7 +80,7 @@ const drawPieChart = (chartData, selector, errorTitle, onLabelClick) => {
     google.charts.setOnLoadCallback(() => { drawBasicPieChart(chartData, selector, errorTitle, onLabelClick) })
 };
 
-const API_BASE = '${API_BASE}';
+const API_BASE = 'api/v1';
 
 const vm = {
     data: {
@@ -157,7 +157,7 @@ const vm = {
             history.replaceState(null, null, url);
         },
         checkError: function(error) {
-            axios.put(`${API_BASE}/errors/resolve/${error.errorHash}`)
+            axios.put(`${API_BASE}/errors/resolve/${this.project}/${error.errorHash}`)
                 .then(response => {
                     if (this.selectedDay.date !== null) {
                         this.updateDayLog({ date: this.selectedDay.date, logType: this.selectedDay.logType }, false);
