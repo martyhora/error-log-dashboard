@@ -1,19 +1,10 @@
 <?php
+use \Psr\Http\Message\ServerRequestInterface as Request;
+use \Psr\Http\Message\ResponseInterface as Response;
+
 require 'vendor/autoload.php';
 
 require 'config.php';
-
-if ((!isset($_GET['project']) || !isset($config[$_GET['project']])) && $_GET['action'] !== 'projects')
-{
-    exit;
-}
-
-if ($_GET['action'] !== 'projects')
-{
-    $database = new medoo($config[$_GET['project']]['db']);
-
-    $mutedErrors = $config[$_GET['project']]['mutedErrors'];
-}
 
 $weeksBack = 5;
 
@@ -86,48 +77,60 @@ class Db
     }
 }
 
-if (!empty($_GET['action']))
-{
-    switch ($_GET['action'])
+$app = new \Slim\App;
+
+$app->get('/projects', function (Request $request, Response $response, $args) use ($config) {
+    return $response->withJson(array_keys($config));
+});
+
+$app->get('/errors/by-date/{project}/{logType}/{hideResolved}/{groupRows}', function (Request $request, Response $response, $args) use ($config, $weeksBack) {
+    $database = new \Medoo\Medoo($config[$args['project']]['db']);
+
+    $mutedErrors = $config[$args['project']]['mutedErrors'];
+
+    $data = Db::getErrorsByDate($database, $args['logType'], $weeksBack, $args['hideResolved'], $mutedErrors, $args['groupRows']);
+
+    return $response->withJson([
+        'errors'     => array_values($data),
+        'errorTypes' => array_values(Db::getErrorsByType($database, $args['logType'], $weeksBack, $args['hideResolved'], $mutedErrors, $args['groupRows'])),
+    ]);
+});
+
+$app->get('/errors/by-day/{project}/{logType}/{hideResolved}/{groupRows}/{date}', function (Request $request, Response $response, $args) use ($config, $weeksBack) {
+    $database = new \Medoo\Medoo($config[$args['project']]['db']);
+
+    $mutedErrors = $config[$args['project']]['mutedErrors'];
+
+    $data = Db::getErrorsByDay($database, $args['logType'], $args['date'], null, $args['hideResolved'], $mutedErrors, null, $args['groupRows']);
+
+    return $response->withJson(array_values($data));
+});
+
+$app->get('/errors/by-last-days/{project}/{logType}/{hideResolved}/{groupRows}/{errorType}', function (Request $request, Response $response, $args) use ($config, $weeksBack) {
+    $database = new \Medoo\Medoo($config[$args['project']]['db']);
+
+    $mutedErrors = $config[$args['project']]['mutedErrors'];
+
+    $data = Db::getErrorsByDay($database, $args['logType'], null, $weeksBack * 7, $args['hideResolved'], $mutedErrors, isset($args['errorType']) ? $args['errorType'] : null, $args['groupRows']);
+
+    return $response->withJson(array_values($data));
+});
+
+$app->put('/errors/resolve/{errorHash}', function (Request $request, Response $response, $args) use ($config) {
+    $database = new \Medoo\Medoo($config[$args['project']]['db']);
+
+    $sql = "SELECT id FROM error_log_status WHERE error_log_hash = '{$database->quote($args['errorHash'])})'";
+
+    $row = $database->query($sql)->fetch();
+
+    if (isset($row['id']))
     {
-        case 'errorsByDate':
-            $data = Db::getErrorsByDate($database, $_GET['logType'], $weeksBack, $_GET['hideResolved'], $mutedErrors, $_GET['groupRows']);
-
-            echo json_encode([
-                'errors' => array_values($data),
-                'errorTypes' => array_values(Db::getErrorsByType($database, $_GET['logType'], $weeksBack, $_GET['hideResolved'], $mutedErrors, $_GET['groupRows'])),
-            ]);
-            break;
-
-        case 'errorsByDay':
-            $data = Db::getErrorsByDay($database, $_GET['logType'], $_GET['date'], null, $_GET['hideResolved'], $mutedErrors, null, $_GET['groupRows']);
-
-            echo json_encode(array_values($data));
-            break;
-
-        case 'errorsByLastDays':
-            $data = Db::getErrorsByDay($database, $_GET['logType'], null, $weeksBack * 7, $_GET['hideResolved'], $mutedErrors, isset($_GET['errorType']) ? $_GET['errorType'] : null, $_GET['groupRows']);
-
-            echo json_encode(array_values($data));
-            break;
-
-        case 'checkError':
-            $sql = "SELECT id FROM error_log_status WHERE error_log_hash = '{$database->quote($_GET['errorHash'])})'";
-
-            $row = $database->query($sql)->fetch();
-
-            if (isset($row['id']))
-            {
-                $database->update('error_log_status', ['resolved_date' => date('Y-m-d H:i:s')], ['id' => $row['id']]);
-            }
-            else
-            {
-                $database->insert('error_log_status', ['error_log_hash' => $_GET['errorHash'], 'resolved_date' => date('Y-m-d H:i:s')]);
-            }
-            break;
-
-        case 'projects':
-            echo json_encode(array_keys($config));
-            break;
+        $database->update('error_log_status', ['resolved_date' => date('Y-m-d H:i:s')], ['id' => $row['id']]);
     }
-}
+    else
+    {
+        $database->insert('error_log_status', ['error_log_hash' => $args['errorHash'], 'resolved_date' => date('Y-m-d H:i:s')]);
+    }
+});
+
+$app->run();

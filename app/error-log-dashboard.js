@@ -80,6 +80,8 @@ const drawPieChart = (chartData, selector, errorTitle, onLabelClick) => {
     google.charts.setOnLoadCallback(() => { drawBasicPieChart(chartData, selector, errorTitle, onLabelClick) })
 };
 
+const API_BASE = '${API_BASE}';
+
 const vm = {
     data: {
         countData: [
@@ -104,7 +106,7 @@ const vm = {
     },
     methods: {
         fetchErrorCountData: function(logType) {
-            axios.get('api/v1/?action=errorsByDate', { params: { logType: logType, hideResolved: this.hideResolvedParam, groupRows: 1, project: this.project } })
+            axios.get(`${API_BASE}/errors/by-date/${this.project}/${logType}/${this.hideResolvedParam}/1`)
                 .then(response => {
                     this.countData.filter(log => log.logType === logType)[0].data = response.data.errors;
 
@@ -112,7 +114,7 @@ const vm = {
                 });
         },
         fetchProjects: function(onProjectsFetched) {
-            axios.get('api/v1/?action=projects')
+            axios.get(`${API_BASE}/projects`)
                 .then(response => {
                     this.projects = response.data;
 
@@ -124,7 +126,7 @@ const vm = {
                 });
         },
         updateDayLog: function(error) {
-            axios.get('api/v1/?action=errorsByDay', { params: { logType: error.logType, date: error.date, hideResolved: this.hideResolvedParam, groupRows: this.groupRows ? 1 : 0, project: this.project } })
+            axios.get(`${API_BASE}/errors/by-day/${this.project}/${error.logType}/${this.hideResolvedParam}/${this.groupRows ? 1 : 0}/${error.date}`)
                 .then(response => {
                     this.countData.filter(log => log.logType === error.logType)[0].log = response.data;
 
@@ -134,7 +136,7 @@ const vm = {
                 });
         },
         updateLastDaysLog: function(logType, errorType = null) {
-            axios.get('api/v1/?action=errorsByLastDays', { params: { logType: logType, hideResolved: this.hideResolvedParam, errorType: errorType, groupRows: this.groupRows ? 1 : 0, project: this.project } })
+            axios.get(`${API_BASE}/errors/by-last-days/${this.project}/${logType}/${this.hideResolvedParam}/${this.groupRows ? 1 : 0}/${errorType}`)
                 .then(response => {
                     this.countData.filter(log => log.logType === logType)[0].log = response.data;
 
@@ -155,7 +157,7 @@ const vm = {
             history.replaceState(null, null, url);
         },
         checkError: function(error) {
-            axios.get(`api/?action=checkError&project=${this.project}`, { params: { errorHash: error.errorHash, date: error.date } })
+            axios.put(`${API_BASE}/errors/resolve/${error.errorHash}`)
                 .then(response => {
                     if (this.selectedDay.date !== null) {
                         this.updateDayLog({ date: this.selectedDay.date, logType: this.selectedDay.logType }, false);
