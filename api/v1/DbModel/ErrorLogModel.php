@@ -6,7 +6,7 @@ class ErrorLogModel extends \DbLib\DbTableModel
 {
     protected $tableName = 'error_log';
 
-    private function getMutedErrors(array $mutedErrors)
+    private function getMutedErrors(array $mutedErrors) : string
     {
         $errs = [];
 
@@ -18,7 +18,7 @@ class ErrorLogModel extends \DbLib\DbTableModel
         return implode(' AND ', $errs);
     }
 
-    public function getErrorsByDate($logType, $weeksBack, $hideResolved, $mutedErrors, $groupRows = true)
+    public function getErrorsByDate(string $logType, int $weeksBack, bool $hideResolved, array $mutedErrors, bool $groupRows = true) : array
     {
         $cond = $hideResolved ? " AND (resolved_date IS NULL OR resolved_date < datetime) AND (" . $this->getMutedErrors($mutedErrors) . ")" : "";
 
@@ -31,7 +31,7 @@ class ErrorLogModel extends \DbLib\DbTableModel
         return $this->database->query($sql)->fetchAll();
     }
 
-    public function getErrorsByDay($logType, $day = null, $lastDays = null, $hideResolved, $mutedErrors, $errorType = null, $groupRows = true)
+    public function getErrorsByDay(string $logType, string $day = null, int $lastDays = null, bool $hideResolved, array $mutedErrors, string $errorType = null, bool $groupRows = true) : array
     {
         $cond = " AND " . ($day ? " DATE_FORMAT(DATE(datetime), '%d.%m.') = '{$day}'" : " datetime >= DATE_SUB(NOW(), INTERVAL {$this->database->quote($lastDays)} DAY)");
 
@@ -59,7 +59,7 @@ class ErrorLogModel extends \DbLib\DbTableModel
         return $this->database->query($sql)->fetchAll();
     }
 
-    public function getErrorsByType($logType, $weeksBack, $hideResolved, $mutedErrors, $groupRows = true)
+    public function getErrorsByType(string $logType, int $weeksBack, bool $hideResolved, array $mutedErrors, bool $groupRows = true) : array
     {
         $cond = $hideResolved ? " AND (resolved_date IS NULL OR resolved_date < datetime) AND (" . $this->getMutedErrors($mutedErrors) . ")" : "";
 
