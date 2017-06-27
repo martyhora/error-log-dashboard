@@ -136,7 +136,7 @@ const vm = {
                 });
         },
         updateLastDaysLog: function(logType, errorType = null) {
-            axios.get(`${API_BASE}/errors/by-last-days/${this.project}/${logType}/${this.hideResolvedParam}/${this.groupRows ? 1 : 0}/${errorType}`)
+            axios.get(`${API_BASE}/errors/by-last-days/${this.project}/${logType}/${this.hideResolvedParam}/${this.groupRows ? 1 : 0}${(errorType ? `?errorType=${errorType}` : ``)}`)
                 .then(response => {
                     this.countData.filter(log => log.logType === logType)[0].log = response.data;
 

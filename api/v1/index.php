@@ -40,12 +40,14 @@ $app->get('/errors/by-day/{project}/{logType}/{hideResolved}/{groupRows}/{date}'
     return $response->withJson(array_values($data));
 });
 
-$app->get('/errors/by-last-days/{project}/{logType}/{hideResolved}/{groupRows}/{errorType}', function (Request $request, Response $response, $args) use ($config, $weeksBack) {
+$app->get('/errors/by-last-days/{project}/{logType}/{hideResolved}/{groupRows}', function (Request $request, Response $response, $args) use ($config, $weeksBack, $app) {
     $errorLogModel = new ErrorLogModel(new Medoo($config[$args['project']]['db']));
 
     $mutedErrors = $config[$args['project']]['mutedErrors'];
 
-    $data = $errorLogModel->getErrorsByDay($args['logType'], null, $weeksBack * 7, $args['hideResolved'], $mutedErrors, isset($args['errorType']) ? $args['errorType'] : null, $args['groupRows']);
+    $errorType = $request->getQueryParam('errorType');
+
+    $data = $errorLogModel->getErrorsByDay($args['logType'], null, $weeksBack * 7, $args['hideResolved'], $mutedErrors, $errorType ?: null, $args['groupRows']);
 
     return $response->withJson(array_values($data));
 });
