@@ -11,6 +11,8 @@ Makes it easier and saves time to analyze error logs and helps to fix bugs.
 
 Frontend of the application is written in Vue.js and backend in PHP.
 
+![alt text](https://martyhora.cz/img/portfolio/thumbnails/3.png)
+
 # Installation
 
 To run the project you will need Apache, PHP, Composer, MySQL and NodeJs installed.
